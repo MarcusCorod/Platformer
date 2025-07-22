@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Platformer Run</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    canvas { background: #87CEEB; display: block; margin: 0 auto; }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas" width="800" height="400"></canvas>
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");const gravity = 0.5;
+let keys = {};
+
+const player = {
+  x: 50,
+  y: 300,
+  width: 30,
+  height: 30,
+  color: "black",
+  dy: 0,
+  jumpForce: -10,
+  grounded: false
+};
+
+const ground = {
+  x: 0,
+  y: 350,
+  width: canvas.width,
+  height: 50,
+  color: "green"
+};
+
+const obstacles = [
+  { x: 300, y: 320, width: 30, height: 30 },
+  { x: 500, y: 320, width: 30, height: 30 },
+  { x: 700, y: 320, width: 30, height: 30 },
+];
+
+const finishLine = {
+  x: 750,
+  y: 250,
+  width: 10,
+  height: 100,
+  color: "red"
+};
+
+function drawRect(obj) {
+  ctx.fillStyle = obj.color || "gray";
+  ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+}
+
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // gravity
+  player.dy += gravity;
+  player.y += player.dy;
+
+  // ground collision
+  if (player.y + player.height >= ground.y) {
+    player.y = ground.y - player.height;
+    player.dy = 0;
+    player.grounded = true;
+  } else {
+    player.grounded = false;
+  }
+
+  // jump
+  if (keys[" "] || keys["ArrowUp"]) {
+    if (player.grounded) {
+      player.dy = player.jumpForce;
+    }
+  }
+
+  // move forward
+  if (keys["ArrowRight"]) player.x += 3;
+  if (keys["ArrowLeft"]) player.x -= 3;
+
+  // draw everything
+  drawRect(ground);
+  drawRect(player);
+  obstacles.forEach(obs => {
+    drawRect(obs);
+
+    // obstacle collision
+    if (
+      player.x
+
