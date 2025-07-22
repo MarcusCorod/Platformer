@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Platformer with Touch</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    canvas { background: #87CEEB; display: block; }
+    .buttons {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      user-select: none;
+    }
+    button {
+      width: 60px;
+      height: 60px;
+      margin: 10px;
+      font-size: 24px;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+<canvas id="game" width="800" height="400"></canvas>
+
+<div class="buttons">
+  <button id="left">⬅️</button>
+  <button id="jump">⬆️</button>
+  <button id="right">➡️</button>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let keys = { left: false, right: false, jump: false };
+let keyStates = {};
+
+document.addEventListener("keydown", (e) => keyStates[e.key] = true);
+document.addEventListener("keyup", (e) => keyStates[e.key] = false);
+
+document.getElementById("left").addEventListener("touchstart", () => keys.left = true);
+document.getElementById("left").addEventListener("touchend", () => keys.left = false);
+document.getElementById("right").addEventListener("touchstart", () => keys.right = true);
+document.getElementById("right").addEventListener("touchend", () => keys.right = false);
+document.getElementById("jump").addEventListener("touchstart", () => keys.jump = true);
+document.getElementById("jump").addEventListener("touchend", () => keys.jump = false);
+
+const player = {
+  x: 50,
+  y: 300,
+  width: 30,
+  height: 50,
+  color: "black",
+  dx: 0,
+  dy: 0,
+  grounded: false
+};
+
+const gravity = 0.8;
+const jumpStrength = -12;
+
+const platforms = [
+  { x: 0, y: 350, width: 800, height: 50 }, // ground
+  { x: 200, y: 280, width: 120, height: 20 },
+  { x: 400, y: 220, width: 120, height: 20 },
+  { x: 600, y: 160, width: 120, height: 20 },
+];
+
+const finish = {
+  x: 720,
+  y: 110,
+  width: 40,
+  height: 40,
+  color: "gold"
+};
+
+function drawRect(obj) {
+  ctx.fillStyle = obj.color || "gray";
+  ctx.fillRect(obj.x, obj.y, obj.width, obj.height);
+}
+
+function updatePlayer() {
+  player.dx = 0;
+
+  const moveLeft = keys.left || keyStates["ArrowLeft"] || keyStates["a"];
+  const moveRight = keys.right || keyStates["ArrowRight"] || keyStates["d"];
+  const jumpPressed = keys.jump || keyStates["ArrowUp"] || keyStates["w"] || keyStates[" "];
+
+  if (moveLeft) player.dx = -4;
+  if (moveRight) player.dx = 4;
+  if (jumpPressed && player.grounded) {
+    player.dy = jumpStrength;
+    player.grounded = false;
+  }
+
+  player.dy += gravity;
+  player.x += player.dx;
+  player.y += player.dy;
+
+  player.grounded = false;
+  for (let plat of platforms) {
+    if (
+      player.x < plat.x + plat.width &&
+      player.x + player.width > plat.x &&
+      player.y + player.height < plat.y + 10 &&
+      player.y + player.height + player.dy >= plat.y
+    ) {
+      player.dy = 0;
+      player.y = plat.y - player.height;
+      player.grounded = true;
+    }
+  }
+
+  if (player.y > canvas.height) reset();
+}
+
+function reset() {
+  player.x = 50;
+  player.y = 300;
+  player.dx = 0;
+  player.dy = 0;
+}
+
+function checkWin() {
+  if (
+    player.x < finish.x + finish.width &&
+    player.x + player.width > finish.x &&
+    player.y < finish.y + finish.height &&
+    player.y + player.height > finish.y
+  ) {
+    alert("🎉 You reached the finish line!");
+    reset();
+  }
+}
+
+function gameLoop() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  drawRect(finish);
+  for (let plat of platforms) drawRect(plat);
+  updatePlayer();
+  drawRect(player);
+  checkWin();
+
+  requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
